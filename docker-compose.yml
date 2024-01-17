@@ -1,0 +1,27 @@
+services:
+  app:
+    build: .
+    ports:
+      - 3000:3000
+    restart: unless-stopped 
+    tty: true
+    depends_on:
+      - db
+
+  db:
+    image: postgres:16-alpine
+    ports:
+      - 5432:5432
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=nestjsapp
+      - TZ=Europe/Prague
+    restart: unless-stopped 
+    volumes:
+      - db:/var/lib/postgres
+    tty: true
+
+
+volumes:
+  db:
