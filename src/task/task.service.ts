@@ -41,16 +41,16 @@ export class TaskService {
       throw new AgentNotFoundError(newTask.agentId);
     }
 
-    const expectedDone = DateTime.now()
-      .plus({ minutes: newTask.durationMinutes })
-      .toISO();
+
+    const expectedDone = new Date();
+    expectedDone.setMinutes(expectedDone.getMinutes() + newTask.durationMinutes);
 
     const [task] = await this.db
       .insert(schema.task)
       .values({
         name: newTask.name,
         description: newTask.description,
-        expectedTimeDone: expectedDone,
+        expectedTimeDone: expectedDone.toISOString(),
         agentId: agent.id,
       })
       .returning();
@@ -76,11 +76,11 @@ export class TaskService {
       throw new TaskAlreadyCompleted(taskId);
     }
 
-    const now = DateTime.now().toJSDate();
+    const now = new Date()
 
     const [completedTask] = await this.db
       .update(schema.task)
-      .set({ doneAt: now })
+      .set({ doneAt: now.toISOString() })
       .where(eq(schema.task.id, taskId))
       .returning()
       .execute();
@@ -109,7 +109,6 @@ export class TaskService {
     const overduteTasksIds: number[] = [];
 
     for (const task of tasksNotDone) {
-      this.logger.debug(`Checking task with id ${task.id}`);
       const expectedTimeDone = new Date(task.expectedTimeDone);
       const now = new Date();
       if (expectedTimeDone < now) {

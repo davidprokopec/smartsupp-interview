@@ -9,23 +9,25 @@ You can use the included Postman collection from `postman-collection.json`.
 Check the logs with `docker logs smartsupp-interview-app-1`.
 
 ### Timestamp problem
+This wasted me a whole day.
 
-`expectedTimeDone: timestamp('expected_time_done').notNull(),` - this one column wasted me a whole day
+I'm using the Drizzle ORM with node-postgres driver and postgres as my database. When storing a timestamp to db from javascript `new Date()`,
+the timestamp stored in DB would be -1 hour from the real time. This is probably caused because of some bug in Drizzle or the postgres driver,
+I've been communicating with the Drizzle team about this and they helped me find a temporary fix.
 
-#### The problem
+#### The solution
 
-Saving, comparing and logging the dates all worked as it should, but for some reason when returning this one specific column to a json response,
-the hour would be -1 than it was in database, in logs, everywhere. If this was a real app, I wouldn't want my frontend to receive a date with wrong
-hour, so I somehow fixed, but its really messy and the `expectedTimeDone` is returned as ISO string, all the other timestamps are as Dates.
+The solution is to change the timestamp columns which are set from JS. 
 
-##### Solution
+I added these options:
+* `mode: 'string'` - this changes the typescript type of the column to 'string' and the date is set using `new Date().toISOString()` 
+* `withTimezone: true` - this adds the timezone info to the timestamp
 
-I changed the column type to `string` which saves the date as ISO string. Then I had to use luxon for
-adding the duration minutes to current time and saving it in db. However when importing the ISO date to luxon, it doesn't work, so I had to use JS `new Date()` for comparing the two dates.
 
-I hope this is not some obvious issue, but I really don't think so because if I change the TZ env variable both in bun and postgres to Europe/London,
-the issue goes away and all times are the same. I have tested node instead of bun, but issue is the same, so I think its an issue with the drizzle-orm
-and have already been communicating with the contributors of Drizzle to figure out the issue.
+I also changed all the `createdAt` and `updatedAt` to same settings so the format when receiving JSON response is the same.
+
+
+
 
 ## Requirements
 

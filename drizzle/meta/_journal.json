@@ -8,6 +8,20 @@
       "when": 1705598796306,
       "tag": "0000_strange_lilith",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1705605009194,
+      "tag": "0001_true_kid_colt",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1705605532919,
+      "tag": "0002_fluffy_chat",
+      "breakpoints": true
     }
   ]
 }
