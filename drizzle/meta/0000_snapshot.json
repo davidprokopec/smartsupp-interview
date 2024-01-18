@@ -1,5 +1,5 @@
 {
-  "id": "1353b8e0-8d2f-479e-af09-b5d5bf412217",
+  "id": "755918b4-5dec-4a86-825d-464f2a894908",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "5",
   "dialect": "pg",
@@ -82,11 +82,18 @@
           "primaryKey": false,
           "notNull": true
         },
-        "expected_duration_minutes": {
-          "name": "expected_duration_minutes",
-          "type": "integer",
+        "expected_time_done": {
+          "name": "expected_time_done",
+          "type": "timestamp",
           "primaryKey": false,
           "notNull": true
+        },
+        "overdue": {
+          "name": "overdue",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
         },
         "done_at": {
           "name": "done_at",

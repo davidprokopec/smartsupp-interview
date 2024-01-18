@@ -19,3 +19,13 @@ export class TaskNotFoundError extends Error {
     return HttpStatus.UNPROCESSABLE_ENTITY;
   }
 }
+
+export class TaskAlreadyCompleted extends Error {
+  constructor(id: number) {
+    super(`Task with id ${id} already completed`);
+  }
+
+  get httpCode() {
+    return HttpStatus.UNPROCESSABLE_ENTITY;
+  }
+}

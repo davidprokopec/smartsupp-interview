@@ -3,6 +3,7 @@ import { TaskService } from './task.service';
 import { drizzleProvider } from '../drizzle/drizzle.provider';
 import { TaskController } from './task.controller';
 import { BullModule } from '@nestjs/bull';
+import { OverdueTaskProcessor } from './processors/overdueTask.processor';
 
 @Module({
   imports: [
@@ -10,7 +11,7 @@ import { BullModule } from '@nestjs/bull';
       name: 'tasks',
     }),
   ],
-  providers: [TaskService, ...drizzleProvider],
+  providers: [TaskService, ...drizzleProvider, OverdueTaskProcessor],
   controllers: [TaskController],
 })
 export class TaskModule {}

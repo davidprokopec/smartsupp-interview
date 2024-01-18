@@ -1,0 +1,199 @@
+{
+	"info": {
+		"_postman_id": "2c805d71-02a7-4081-89c0-d77f16f44acb",
+		"name": "Teamsupp inverview API",
+		"description": "Homework API for teamsupp interview\n\nrequirements:\n\n> \\> Prepare a simple http server for handling task assignement.  \n\\> Main used entities:  \n\\> 1. agent - name, email  \n\\> 2. task - name, description, expected duration  \n\\> API to implement:  \n\\> 1. endpoint to add agent - agent is unique by email  \n\\> 2. endpoint to assign task to agent - request body contains task name, description, duration, agent id  \n\\> 3. endpoint to mark task as done  \n\\> Features needed:  \n\\> - if task is not finished by expected duration(time created + duration), push to queue  \n\\> - (assume this is another instance) consume from queue and log that the task was not finished  \n\\> Technical specification:  \n\\> - Koa.js or NestJS framework  \n\\> - data should be stored in some SQL DB  \n\\> - any queue system that you choose  \n\\> - you can use other DB entities and properties as you see fit  \n\\> - tests  \n\\> - documentation on how to start the project(so we can try it locally)",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "15265420"
+	},
+	"item": [
+		{
+			"name": "Agent",
+			"item": [
+				{
+					"name": "Get all agents",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{url}}",
+							"host": [
+								"{{url}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Add new agent",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Test Testing\",\n    \"email\": \"test@test.test\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{url}}",
+							"host": [
+								"{{url}}"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"description": "`/agent` path for the API",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"pm.collectionVariables.set(\"path\", \"agent\");"
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "Task",
+			"item": [
+				{
+					"name": "Get all tasks",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{url}}",
+							"host": [
+								"{{url}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Add new task",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Make tea\",\n    \"description\": \"Make cup of tea\",\n    \"durationMinutes\": 20,\n    \"agentId\": 1\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{url}}",
+							"host": [
+								"{{url}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Mark task as done",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"taskId\": 1\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{url}}/complete",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"complete"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"pm.collectionVariables.set(\"path\", \"task\");"
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "localhost:3000",
+			"type": "string"
+		},
+		{
+			"key": "path",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "url",
+			"value": "{{base_url}}/{{path}}",
+			"type": "string"
+		}
+	]
+}

@@ -10,7 +10,10 @@ export class OverdueTaskProcessor{
 
   @Process('overdue')
   async handleOverdue(job: Job) {
-    this.logger.debug(`Processing job`, job);
+    this.logger.debug(`Processing job ${job.id}`);
+
+    this.logger.log(`Task id: ${job.data.id}, taskName: ${job.data.name}, agentName: ${job.data.agentName} - was not finished.`);
+    await job.moveToCompleted()
     
   }
 }

@@ -22,7 +22,9 @@ export const task = pgTable('task', {
   agentId: integer('agent_id')
     .notNull()
     .references(() => agent.id),
-  expectedTimeDone: timestamp('expected_time_done').notNull(),
+  expectedTimeDone: timestamp('expected_time_done', {
+    mode: 'string',
+  }).notNull(),
   overdue: boolean('overdue').notNull().default(false),
   doneAt: timestamp('done_at'),
   createdAt: timestamp('created_at').notNull().defaultNow(),

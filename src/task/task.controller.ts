@@ -10,7 +10,11 @@ import {
 } from '@nestjs/common';
 import { TaskService } from './task.service';
 import { CompleteTaskDto, NewTaskDto } from './task.dto';
-import { AgentNotFoundError, TaskNotFoundError } from './utils';
+import {
+  AgentNotFoundError,
+  TaskAlreadyCompleted,
+  TaskNotFoundError,
+} from './utils';
 
 @Controller('task')
 export class TaskController {
@@ -39,8 +43,11 @@ export class TaskController {
     try {
       const task = await this.taskService.completeTask(completeTask.taskId);
       return task;
-    } catch (error) {
-      if (error instanceof TaskNotFoundError) {
+    } catch (error: any) {
+      if (
+        error instanceof TaskNotFoundError ||
+        error instanceof TaskAlreadyCompleted
+      ) {
         throw new HttpException(error.message, error.httpCode);
       }
     }

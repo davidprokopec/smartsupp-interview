@@ -3,11 +3,16 @@ import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { DrizzleAsyncProvider } from '../drizzle/drizzle.provider';
 import { schema } from '../drizzle/schema';
 import { NewTaskDto } from './task.dto';
-import { AgentNotFoundError, TaskNotFoundError } from './utils';
+import {
+  AgentNotFoundError,
+  TaskAlreadyCompleted,
+  TaskNotFoundError,
+} from './utils';
 import { and, eq, inArray, isNull } from 'drizzle-orm';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
 import { Cron, CronExpression } from '@nestjs/schedule';
+import { DateTime } from 'luxon';
 
 @Injectable()
 export class TaskService {
@@ -36,10 +41,9 @@ export class TaskService {
       throw new AgentNotFoundError(newTask.agentId);
     }
 
-    const expectedDone = new Date();
-    expectedDone.setMinutes(
-      expectedDone.getMinutes() + newTask.durationMinutes,
-    );
+    const expectedDone = DateTime.now()
+      .plus({ minutes: newTask.durationMinutes })
+      .toISO();
 
     const [task] = await this.db
       .insert(schema.task)
@@ -56,20 +60,27 @@ export class TaskService {
 
   async completeTask(taskId: number) {
     this.logger.debug(`Completing task with id ${taskId}`);
-    const task = await this.db
+    const [task] = await this.db
       .select()
       .from(schema.task)
       .where(eq(schema.task.id, taskId))
       .limit(1);
 
-    if (task.length === 0) {
+    if (!task) {
       this.logger.error(`Task with id ${taskId} not found`);
       throw new TaskNotFoundError(taskId);
     }
 
+    if (task.doneAt) {
+      this.logger.error(`Task with id ${taskId} already completed`);
+      throw new TaskAlreadyCompleted(taskId);
+    }
+
+    const now = DateTime.now().toJSDate();
+
     const [completedTask] = await this.db
       .update(schema.task)
-      .set({ doneAt: new Date() })
+      .set({ doneAt: now })
       .where(eq(schema.task.id, taskId))
       .returning()
       .execute();
@@ -77,16 +88,21 @@ export class TaskService {
     return completedTask;
   }
 
-  @Cron(CronExpression.EVERY_30_SECONDS)
+  @Cron(CronExpression.EVERY_5_SECONDS)
   async checkTasksStatus() {
-    this.logger.debug('Checking tasks status');
     const tasksNotDone = await this.db
-      .select()
+      .select({
+        id: schema.task.id,
+        name: schema.task.name,
+        expectedTimeDone: schema.task.expectedTimeDone,
+        agentId: schema.task.agentId,
+        agentName: schema.agent.name,
+      })
       .from(schema.task)
+      .leftJoin(schema.agent, eq(schema.task.agentId, schema.agent.id))
       .where(and(isNull(schema.task.doneAt), eq(schema.task.overdue, false)));
 
     if (tasksNotDone.length === 0) {
-      this.logger.debug('No tasks to check');
       return;
     }
 
@@ -94,8 +110,9 @@ export class TaskService {
 
     for (const task of tasksNotDone) {
       this.logger.debug(`Checking task with id ${task.id}`);
-      this.logger.debug(`Expected time done: ${task.expectedTimeDone}`);
-      if (new Date(task.expectedTimeDone) < new Date()) {
+      const expectedTimeDone = new Date(task.expectedTimeDone);
+      const now = new Date();
+      if (expectedTimeDone < now) {
         this.logger.warn(`Task with id ${task.id} is overdue, adding to queue`);
         await this.overdueTaskQueue.add('overdue', task);
         overduteTasksIds.push(task.id);
