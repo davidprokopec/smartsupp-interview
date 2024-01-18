@@ -22,14 +22,16 @@ export class AgentService {
     this.logger.debug(`Creating new agent: ${JSON.stringify(newAgent)}`);
 
     try {
-      const agent = await this.db
+      const [agent] = await this.db
         .insert(schema.agent)
         .values({ name: newAgent.name, email: newAgent.email })
         .returning();
       return agent;
     } catch (error: any) {
       this.logger.error(`Error while creating new agent ${error.message}`);
-      throw new DuplicateEmailError();
+      if (error.code === '23505') {
+        throw new DuplicateEmailError();
+      }
     }
   }
 }

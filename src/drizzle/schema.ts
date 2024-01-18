@@ -1,4 +1,11 @@
-import { integer, pgTable, serial, text, timestamp } from 'drizzle-orm/pg-core';
+import {
+  boolean,
+  integer,
+  pgTable,
+  serial,
+  text,
+  timestamp,
+} from 'drizzle-orm/pg-core';
 
 export const agent = pgTable('agent', {
   id: serial('id').primaryKey(),
@@ -15,7 +22,8 @@ export const task = pgTable('task', {
   agentId: integer('agent_id')
     .notNull()
     .references(() => agent.id),
-  expectedDurationMinutes: integer('expected_duration_minutes').notNull(),
+  expectedTimeDone: timestamp('expected_time_done').notNull(),
+  overdue: boolean('overdue').notNull().default(false),
   doneAt: timestamp('done_at'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),

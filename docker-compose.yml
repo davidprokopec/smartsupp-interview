@@ -7,6 +7,7 @@ services:
     tty: true
     depends_on:
       - db
+      - redis
 
   db:
     image: postgres:16-alpine
@@ -17,11 +18,22 @@ services:
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_DB=nestjsapp
       - TZ=Europe/Prague
-    restart: unless-stopped 
     volumes:
       - db:/var/lib/postgres
+    restart: unless-stopped 
+    tty: true
+
+  redis:
+    image: redis:7.2.4-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - 6379:6379
+    volumes:
+      - redis:/data
+    restart: unless-stopped
     tty: true
 
 
 volumes:
   db:
+  redis:

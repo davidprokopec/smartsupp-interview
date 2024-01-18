@@ -4,7 +4,10 @@ import { DrizzleAsyncProvider } from '../drizzle/drizzle.provider';
 import { schema } from '../drizzle/schema';
 import { NewTaskDto } from './task.dto';
 import { AgentNotFoundError, TaskNotFoundError } from './utils';
-import { eq } from 'drizzle-orm';
+import { and, eq, inArray, isNull } from 'drizzle-orm';
+import { InjectQueue } from '@nestjs/bull';
+import { Queue } from 'bull';
+import { Cron, CronExpression } from '@nestjs/schedule';
 
 @Injectable()
 export class TaskService {
@@ -12,6 +15,7 @@ export class TaskService {
 
   constructor(
     @Inject(DrizzleAsyncProvider) private db: NodePgDatabase<typeof schema>,
+    @InjectQueue('tasks') private overdueTaskQueue: Queue,
   ) {}
 
   async getAll() {
@@ -21,34 +25,36 @@ export class TaskService {
 
   async addNew(newTask: NewTaskDto) {
     this.logger.debug(`Creating new task: ${JSON.stringify(newTask)}`);
-    const agent = await this.db
+    const [agent] = await this.db
       .select()
       .from(schema.agent)
       .where(eq(schema.agent.id, newTask.agentId))
       .limit(1);
 
-    if (agent.length === 0) {
+    if (!agent) {
       this.logger.error(`Agent with id ${newTask.agentId} not found`);
       throw new AgentNotFoundError(newTask.agentId);
     }
 
-    const duration = new Date();
-    duration.setMinutes(duration.getMinutes() + newTask.duration);
+    const expectedDone = new Date();
+    expectedDone.setMinutes(
+      expectedDone.getMinutes() + newTask.durationMinutes,
+    );
 
-    const task = await this.db
+    const [task] = await this.db
       .insert(schema.task)
       .values({
         name: newTask.name,
         description: newTask.description,
-        expectedDurationMinutes: newTask.duration,
-        agentId: agent[0].id,
+        expectedTimeDone: expectedDone,
+        agentId: agent.id,
       })
       .returning();
+
     return task;
   }
 
   async completeTask(taskId: number) {
-    this.logger.debug(`time is `, new Date())
     this.logger.debug(`Completing task with id ${taskId}`);
     const task = await this.db
       .select()
@@ -61,12 +67,48 @@ export class TaskService {
       throw new TaskNotFoundError(taskId);
     }
 
-    const completedTask = await this.db
+    const [completedTask] = await this.db
       .update(schema.task)
       .set({ doneAt: new Date() })
       .where(eq(schema.task.id, taskId))
-      .returning();
+      .returning()
+      .execute();
 
     return completedTask;
+  }
+
+  @Cron(CronExpression.EVERY_30_SECONDS)
+  async checkTasksStatus() {
+    this.logger.debug('Checking tasks status');
+    const tasksNotDone = await this.db
+      .select()
+      .from(schema.task)
+      .where(and(isNull(schema.task.doneAt), eq(schema.task.overdue, false)));
+
+    if (tasksNotDone.length === 0) {
+      this.logger.debug('No tasks to check');
+      return;
+    }
+
+    const overduteTasksIds: number[] = [];
+
+    for (const task of tasksNotDone) {
+      this.logger.debug(`Checking task with id ${task.id}`);
+      this.logger.debug(`Expected time done: ${task.expectedTimeDone}`);
+      if (new Date(task.expectedTimeDone) < new Date()) {
+        this.logger.warn(`Task with id ${task.id} is overdue, adding to queue`);
+        await this.overdueTaskQueue.add('overdue', task);
+        overduteTasksIds.push(task.id);
+      }
+    }
+
+    if (overduteTasksIds.length === 0) {
+      return;
+    }
+
+    await this.db
+      .update(schema.task)
+      .set({ overdue: true })
+      .where(inArray(schema.task.id, overduteTasksIds));
   }
 }
