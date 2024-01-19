@@ -88,7 +88,7 @@ export class TaskService {
     return completedTask;
   }
 
-  @Cron(CronExpression.EVERY_5_SECONDS)
+  @Cron(CronExpression.EVERY_MINUTE)
   async checkTasksStatus() {
     const tasksNotDone = await this.db
       .select({

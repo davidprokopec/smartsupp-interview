@@ -3,8 +3,6 @@ import {
   Controller,
   Get,
   HttpException,
-  HttpStatus,
-  Param,
   Post,
   Put,
 } from '@nestjs/common';
