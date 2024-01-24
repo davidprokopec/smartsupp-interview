@@ -1,4 +1,4 @@
-import { createZodDto, createZodGuard } from 'nestjs-zod';
+import { createZodDto } from 'nestjs-zod';
 import { z } from 'nestjs-zod/z';
 
 const newTaskScheme = z.object({

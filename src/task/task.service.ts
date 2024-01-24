@@ -12,7 +12,6 @@ import { and, eq, inArray, isNull } from 'drizzle-orm';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { DateTime } from 'luxon';
 
 @Injectable()
 export class TaskService {

@@ -3,8 +3,6 @@ import {
   Controller,
   Get,
   HttpException,
-  HttpStatus,
-  Post,
   Put,
 } from '@nestjs/common';
 import { AgentService } from './agent.service';

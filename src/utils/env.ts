@@ -5,7 +5,6 @@ const envSchema = z.object({
   DB_URL: z.string().url(),
   REDIS_HOST: z.string(),
   REDIS_PORT: z.coerce.number().positive().max(65535),
-  // TZ: z.string(),
 });
 
 const env = envSchema.safeParse(process.env);

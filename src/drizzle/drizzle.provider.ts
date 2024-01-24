@@ -1,15 +1,15 @@
-import { getDb, processMigrations } from './utils';
+import { getDb } from "./utils";
 
-export const DrizzleAsyncProvider = 'drizzleProvider';
+export const DrizzleAsyncProvider = "drizzleProvider";
 
 export const drizzleProvider = [
-  {
-    provide: DrizzleAsyncProvider,
-    useFactory: async () => {
-      const db = await getDb();
+	{
+		provide: DrizzleAsyncProvider,
+		useFactory: async () => {
+			const db = await getDb();
 
-      return db;
-    },
-    exports: [DrizzleAsyncProvider],
-  },
+			return db;
+		},
+		exports: [DrizzleAsyncProvider],
+	},
 ];
